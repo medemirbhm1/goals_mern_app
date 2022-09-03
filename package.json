@@ -2,10 +2,10 @@
   "name": "goals_mern_app",
   "version": "1.0.0",
   "description": "my first mern project",
-  "main": "server.js",
+  "main": "server.mjs",
   "scripts": {
-    "start": "node backend/server.js",
-    "server": "nodemon backend/server.js"
+    "start": "node backend/server.mjs",
+    "server": "nodemon backend/server.mjs"
   },
   "author": "emir",
   "license": "ISC",
@@ -13,6 +13,7 @@
     "colors": "^1.4.0",
     "dotenv": "^16.0.2",
     "express": "^4.18.1",
+    "express-async-handler": "^1.2.0",
     "mongoose": "^6.5.4"
   },
   "devDependencies": {
