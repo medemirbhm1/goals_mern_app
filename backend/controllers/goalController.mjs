@@ -1,11 +1,11 @@
 import asyncHandler from "express-async-handler";
-import { goalModel } from "../models/goalModel.mjs";
-
+import Goal from "../models/goalModel.mjs";
+import User from "../models/userModel.mjs";
 // @desc Get goals
 // @route GET /api/goals
 // @access Private
 export const getGoals = asyncHandler(async (req, res) => {
-  const goals = await goalModel.find();
+  const goals = await Goal.find({ createdBy: req.user.id });
   res.status(200).send(goals);
 });
 
@@ -17,8 +17,9 @@ export const setGoal = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("Please add text");
   }
-  const goal = await goalModel.create({
+  const goal = await Goal.create({
     text: req.body.text,
+    createdBy: req.user.id,
   });
   res.status(200).send(goal);
 });
@@ -27,22 +28,43 @@ export const setGoal = asyncHandler(async (req, res) => {
 // @route PUT /api/goals/:id
 // @access Private
 export const updateGoal = asyncHandler(async (req, res) => {
-  const goal = await goalModel.findById(req.params.id);
+  const goal = await Goal.findById(req.params.id);
   if (!goal) {
     res.status(400);
     throw new Error("Goal not found");
   }
-  const updatedGoal = await goalModel.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    { new: true }
-  );
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    res.status(400);
+    throw new Error("User not found");
+  }
+  if (goal.createdBy.toString() !== user.id) {
+    res.status(401);
+    throw new Error("User not authorized");
+  }
+  const updatedGoal = await Goal.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+  });
   res.status(200).send(updatedGoal);
 });
 // @desc Delete goal
 // @route DELETE /api/goals/:id
 // @access Private
 export const deleteGoal = asyncHandler(async (req, res) => {
-  await goalModel.findByIdAndRemove(req.params.id);
+  const goal = await Goal.findById(req.params.id);
+  if (!goal) {
+    res.status(400);
+    throw new Error("Goal not found");
+  }
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    res.status(400);
+    throw new Error("User not found");
+  }
+  if (goal.createdBy.toString() !== user.id) {
+    res.status(401);
+    throw new Error("User not authorized");
+  }
+  await goal.remove();
   res.status(200).send({ id: req.params.id });
 });
